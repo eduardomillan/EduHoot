@@ -130,7 +130,10 @@ quan es decidisca incorporar-les al document principal:
   forma (triangle/romb/cercle/quadrat), no només el color.~~ **Fet**
   per al mode "a cegues" (vore "Buits detectats" més amunt).
 - `prefers-reduced-motion` per a desactivar/suavitzar les animacions
-  del compte enrere.
+  del compte enrere. El giro de les flashcards (`/solo/`) és sempre
+  animat, encara que el sistema demane reduir el moviment: és un gir curt
+  en 2D i és una decisió de producte. Caldria revisar-ho si hi ha alumnat
+  que el necessite.
 - Estendre `.sr-only` i els patrons ARIA ja usats a `solo`/`multiplayer`
   cap a `host`, `create` i `join`.
 - Gestió de focus/`Escape` als tres modals existents.
