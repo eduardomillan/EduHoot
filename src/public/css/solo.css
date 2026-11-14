@@ -1052,17 +1052,12 @@ body.playing #answers > .free-answer-row{ grid-column: 1 / -1; }
     font-weight: 600;
     text-align: center;
 }
-/* Giro 3D: les dues cares es miren a la mateixa cel·la del grid (la més alta mana l'altura). */
-.flashcard-scene{ perspective: 1200px; }
+/* Giro: la targeta s'estreny en horizontal fins a una línia, canvia de cara i es torna a obrir.
+   Només transformacions 2D (les 3D es veien malament en alguns navegadors). Ho anima el JS. */
 .flashcard{
     display: grid;
     cursor: pointer;
-    min-height: 220px;
-    transform-style: preserve-3d;
-    transition: transform 0.6s ease;
 }
-.flashcard.is-back{ transform: rotateY(180deg); }
-.flashcard.no-anim{ transition: none; }
 .flashcard__face{
     grid-area: 1 / 1;
     padding: 18px 20px;
@@ -1076,16 +1071,14 @@ body.playing #answers > .free-answer-row{ grid-column: 1 / -1; }
     align-items: center;
     text-align: center;
     gap: 12px;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
+    min-height: 220px;
 }
 .flashcard__face--back{
-    transform: rotateY(180deg);
     background: rgba(34,197,94,0.08);
+    visibility: hidden;
 }
-@media (prefers-reduced-motion: reduce){
-    .flashcard{ transition: none; }
-}
+.flashcard.is-back .flashcard__face--front{ visibility: hidden; }
+.flashcard.is-back .flashcard__face--back{ visibility: visible; }
 .flashcard__label{
     margin: 0;
     font-size: 12px;
@@ -1093,7 +1086,9 @@ body.playing #answers > .free-answer-row{ grid-column: 1 / -1; }
     letter-spacing: 0.06em;
     color: #9fb1d9;
 }
-.flashcard__media{ cursor: auto; align-self: stretch; }
+.flashcard__media{ align-self: stretch; }
+.flashcard__media video,
+.flashcard__media iframe{ cursor: auto; }
 .flashcard__media img,
 .flashcard__media video,
 .flashcard__media iframe{

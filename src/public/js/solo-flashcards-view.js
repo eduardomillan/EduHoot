@@ -34,13 +34,13 @@ function cardAnswerTexts(q, t){
 }
 
 // Torna la targeta al davant sense animació (en canviar de targeta, no ha de girar de nou).
+// Cancel·la un giro en curs: el token invalida la part del giro que quedava per fer.
 function snapCardFront(c){
-    if(!c.flipped) return;
-    c.flipped = false;
-    c.instant = true;
-    requestAnimationFrame(function(){
-        requestAnimationFrame(function(){ c.instant = false; });
-    });
+    c.turnId = (c.turnId || 0) + 1;
+    c.turning = false;
+    var el = document.getElementById('flashcard');
+    if(el && el.getAnimations) el.getAnimations().forEach(function(a){ a.cancel(); });
+    if(c.flipped) c.flipped = false;
 }
 
 function stopFlashcardsSpeech(){
@@ -63,7 +63,8 @@ function openFlashcards(quiz){
         deck: [],
         pos: 0,
         flipped: false,
-        instant: false,
+        turning: false,
+        turnId: 0,
         phase: 'start',
         shuffle: false
     };
@@ -135,14 +136,45 @@ var soloFlashcards = {
             snapCardFront(c);
             c.phase = deck.length ? 'card' : 'done';
         },
+        // Giro en dues meitats: la targeta s'estreny fins a una línia, canvia de cara i es torna a obrir.
         cardsFlip: function(){
+            var c = this.s.cards;
+            if(!c || c.turning) return;
             stopFlashcardsSpeech();
-            this.s.cards.flipped = !this.s.cards.flipped;
+            // El giro es sempre animat, també amb «reducir movimiento» activat al sistema (decisió de producte).
+            var el = document.getElementById('flashcard');
+            if(!el || !el.animate){
+                c.flipped = !c.flipped;
+                return;
+            }
+            var self = this;
+            var token = (c.turnId = (c.turnId || 0) + 1);
+            c.turning = true;
+            var half1 = el.animate(
+                [{ transform: 'scaleX(1)' }, { transform: 'scaleX(0)' }],
+                { duration: 200, easing: 'ease-in', fill: 'forwards' }
+            );
+            half1.onfinish = function(){
+                if(c.turnId !== token) return;
+                c.flipped = !c.flipped;
+                self.$nextTick(function(){
+                    if(c.turnId !== token) return;
+                    var half2 = el.animate(
+                        [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }],
+                        { duration: 200, easing: 'ease-out' }
+                    );
+                    half1.cancel();
+                    half2.onfinish = function(){
+                        if(c.turnId === token) c.turning = false;
+                    };
+                });
+            };
         },
         // Clic a qualsevol punt de la targeta la gira. No ho fa en el media (vídeo, imatge, iframe),
         // ni si l'usuari està seleccionant text.
         cardsFlipFromCard: function(ev){
-            if(ev.target.closest && ev.target.closest('.flashcard__media')) return;
+            // El vídeo i el YouTube tenen els seus propis controls: no giren la targeta. La imatge sí.
+            if(ev.target.closest && ev.target.closest('video, iframe')) return;
             var sel = window.getSelection ? window.getSelection() : null;
             if(sel && !sel.isCollapsed && String(sel).trim() !== '') return;
             this.cardsFlip();

@@ -123,8 +123,6 @@ test('girar la targeta muestra la cara de la resposta i oculta la de la pregunta
     // En canviar de targeta, la nova és al davant i no fa un giro en sentit contrari.
     await page.locator('#cards-next').click();
     await expect(page.locator('.flashcard')).not.toHaveClass(/is-back/);
-    await expect(page.locator('.flashcard')).toHaveClass(/no-anim/);
-    await expect(page.locator('.flashcard')).not.toHaveClass(/no-anim/);
 });
 
 test('clicar la targeta la gira i tornar a clicar-la la retorna', async ({ page }) => {
@@ -140,4 +138,30 @@ test('clicar la targeta la gira i tornar a clicar-la la retorna', async ({ page 
     await page.locator('.flashcard__answers').click();
     await expect(page.locator('.flashcard')).not.toHaveClass(/is-back/);
     await expect(page.locator('#cards-progress')).toHaveText('Pregunta 1 de 3');
+});
+
+test('el giro es animat també amb reducir movimiento activat al sistema', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await mockBackend(page);
+    await page.goto('/solo/?lang=es');
+    await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
+    await page.locator('#cards-start-all').click();
+    await page.locator('#cards-flip').click();
+    await expect.poll(() => page.evaluate(() => document.getAnimations().length)).toBeGreaterThan(0);
+    await expect(page.locator('.flashcard')).toHaveClass(/is-back/);
+});
+
+test('si la pregunta té imatge, clicar-la gira la targeta', async ({ page }) => {
+    const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==';
+    await mockBackend(page);
+    await page.route('**/api/quizzes/q1', route => route.fulfill({ json: { ...quiz, questions: [
+        { question: 'Quina és?', type: 'quiz', image: png, answers: ['A', 'B'], correctAnswers: [2], time: 20 }
+    ] } }));
+    await page.goto('/solo/?lang=es');
+    await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
+    await page.locator('#cards-start-all').click();
+    await expect(page.locator('.flashcard__media img')).toBeVisible();
+    await page.locator('.flashcard__media img').click();
+    await expect(page.locator('.flashcard')).toHaveClass(/is-back/);
+    await expect(page.locator('#flashcard-answer li')).toHaveText(['B']);
 });

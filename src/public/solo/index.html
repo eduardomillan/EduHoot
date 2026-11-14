@@ -227,7 +227,7 @@
                     <div v-else class="flashcard-wrap">
                         <p id="cards-progress" class="cards-progress">{{ cardsProgressText }}</p>
                         <div class="flashcard-scene">
-                            <div class="flashcard" :class="{ 'is-back': s.cards.flipped, 'no-anim': s.cards.instant }" @click="cardsFlipFromCard">
+                            <div id="flashcard" class="flashcard" :class="{ 'is-back': s.cards.flipped }" @click="cardsFlipFromCard">
                                 <!-- Les dues cares són sempre al DOM; la que no toca queda oculta i inerta (ni teclat ni lector de pantalla). -->
                                 <div class="flashcard__face flashcard__face--front" :aria-hidden="s.cards.flipped ? 'true' : 'false'" :inert="s.cards.flipped || null">
                                     <p class="flashcard__label">{{ t('flashcardsFront') }}</p>
